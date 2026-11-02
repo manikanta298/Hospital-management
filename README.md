@@ -60,3 +60,15 @@ frontend/src      pages/ (one file per module), components/ (Layout, Crud, ui), 
 tools/gen-schema.js   regenerates backend/db/schema.sql from the Laravel migrations
 ```
 See `CONVERSION.md` for the controller-by-controller mapping and the list of known differences.
+
+### PostgreSQL CA certificate on Render
+
+Add the database provider's CA certificate (or CA bundle) as a Secret File named
+`ca.pem`. Set `DATABASE_CA_CERT_PATH=/etc/secrets/ca.pem` and keep `DATABASE_URL`
+set to the provider's PostgreSQL connection URL. Redeploy after saving.
+
+The application, migration, seed, demo seed, and permission sync commands all read
+this file at runtime and verify the server certificate. When the CA path is set,
+URL SSL options are removed so they cannot override the verified TLS configuration.
+Client-certificate authentication is not supported by this CA-only configuration.
+Leave the CA path unset for local Docker Compose PostgreSQL.

@@ -1,8 +1,9 @@
+const databaseConfig = require('../src/config/database');
 // Small demo data set so a fresh install is explorable: departments, doctors, services, patients, beds, medicines, a share policy.
 require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
 const { Pool } = require('pg');
 (async () => {
-  const pool = new Pool({ connectionString: process.env.DATABASE_URL }); const q = (s, p) => pool.query(s, p); const one = async (s, p) => (await q(s, p)).rows[0];
+  const pool = new Pool(databaseConfig()); const q = (s, p) => pool.query(s, p); const one = async (s, p) => (await q(s, p)).rows[0];
   const ins = async (t, o) => { const k = Object.keys(o); return (await q(`INSERT INTO "${t}" (${k.map((x) => `"${x}"`).join(',')}) VALUES (${k.map((_, i) => `$${i + 1}`).join(',')}) RETURNING *`, k.map((x) => o[x]))).rows[0]; };
   if ((await one('SELECT COUNT(*)::int c FROM doctor')).c > 0) { console.log('Demo data skipped: doctors already exist.'); return pool.end(); }
   for (const d of ['General Medicine', 'Cardiology', 'Paediatrics', 'Gynaecology']) await ins('department', { name: d, description: '', x: '', y: '' });

@@ -1,3 +1,4 @@
+const databaseConfig = require('./config/database');
 // PostgreSQL access. Dates and timestamps are returned as plain strings (like Laravel did)
 // so a DATE column never shifts by a timezone, and NUMERIC stays an exact decimal string.
 const { Pool, types } = require('pg');
@@ -5,7 +6,7 @@ types.setTypeParser(1082, (v) => v); // date
 types.setTypeParser(1114, (v) => v); // timestamp
 types.setTypeParser(20, (v) => parseInt(v, 10)); // bigint
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const pool = new Pool(databaseConfig());
 
 const run = (c) => c || pool;
 const qi = (n) => `"${String(n).replace(/"/g, '""')}"`;

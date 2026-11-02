@@ -1,3 +1,4 @@
+const databaseConfig = require('../src/config/database');
 // Port of UserTableSeeder: default admin, hospital record, permission catalogue (all granted to Admin), notification types.
 require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
 const bcrypt = require('bcryptjs'); const { Pool } = require('pg'); const cfg = require('../src/config/permissions');
@@ -16,4 +17,4 @@ async function seed(pool, log = console.log) {
   for (const n of ['appointment', 'payment']) if (!(await pool.query('SELECT 1 FROM notification_type WHERE notification=$1', [n])).rows.length) await pool.query("INSERT INTO notification_type (notification, type) VALUES ($1,'sms')", [n]);
 }
 module.exports = seed;
-if (require.main === module) { const pool = new Pool({ connectionString: process.env.DATABASE_URL }); seed(pool).then(() => pool.end()).catch((e) => { console.error(e); process.exit(1); }); }
+if (require.main === module) { const pool = new Pool(databaseConfig()); seed(pool).then(() => pool.end()).catch((e) => { console.error(e); process.exit(1); }); }
