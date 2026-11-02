@@ -25,7 +25,26 @@ npm run dev:web                           # http://localhost:5173  (proxies /api
 Sign in with **admin / 123456** and change the password under *My settings*.
 
 Production: `npm run build`, then `npm start` – Express serves the built React app and the API on one port.
-Docker: build the frontend, then `docker compose up --build`.
+Docker: `docker compose up --build`. The Dockerfile builds the React frontend inside the image.
+
+## Docker deployment
+
+Use the repository root as the build context and `Dockerfile` as the Dockerfile path.
+Leave the service root directory empty and leave the Docker command override empty.
+The image installs dependencies, builds the frontend, and serves the frontend and API together.
+
+Set runtime environment variables before deploying:
+
+- `DATABASE_URL`: connection URL for your PostgreSQL database.
+- `SESSION_SECRET`: a long random secret.
+- `COOKIE_SECURE=true` when serving over HTTPS.
+
+The container uses the platform-provided `PORT` (default: `8000`). At startup it runs
+the database migration and initial seed, then starts Express. Use `/api/health` for
+the health check. Change the initial admin password after the first login.
+
+For Render, use the Docker runtime, branch `main`, Dockerfile Path `./Dockerfile`,
+and Docker Build Context Directory `.`. Deploy the latest commit after saving.
 
 ## Tests
 `npm test --prefix backend` starts a throw-away PostgreSQL (embedded) and exercises the API end to end

@@ -1,4 +1,4 @@
-# Build the React app first (cd frontend && npm install && npm run build), then:  docker compose up --build
+# Build frontend and backend together: docker compose up --build
 services:
   db:
     image: postgres:16-alpine
@@ -6,7 +6,7 @@ services:
     volumes: [pgdata:/var/lib/postgresql/data]
     healthcheck: { test: ["CMD-SHELL", "pg_isready -U postgres"], interval: 5s, retries: 10 }
   app:
-    build: { context: ., dockerfile: backend/Dockerfile }
+    build: { context: ., dockerfile: Dockerfile }
     depends_on: { db: { condition: service_healthy } }
     environment:
       DATABASE_URL: postgres://postgres:postgres@db:5432/icthospital
