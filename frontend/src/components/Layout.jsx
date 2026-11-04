@@ -38,6 +38,7 @@ import hourglass_top from '@material-design-icons/svg/filled/hourglass_top.svg?u
 import local_hospital from '@material-design-icons/svg/filled/local_hospital.svg?url';
 import local_pharmacy from '@material-design-icons/svg/filled/local_pharmacy.svg?url';
 import lock from '@material-design-icons/svg/filled/lock.svg?url';
+import menu from '@material-design-icons/svg/filled/menu.svg?url';
 import manage_accounts from '@material-design-icons/svg/filled/manage_accounts.svg?url';
 import medical_information from '@material-design-icons/svg/filled/medical_information.svg?url';
 import medical_services from '@material-design-icons/svg/filled/medical_services.svg?url';
@@ -94,15 +95,16 @@ function MaterialIcon({ source }) {
 
 export default function Layout() {
   const app = useApp(); const nav = useNavigate(); const { me, flash } = app; const [q, setQ] = useState('');
+  const [menuOpen, setMenuOpen] = useState(false);
   const visible = (p) => !p || (p === '@admin' ? me.role === 'Admin' : app.can(p));
   const logout = async () => { const r = await api.post('/logout'); await app.refresh(); nav(r.redirect === '/dashboard' ? '/dashboard' : '/'); };
   const switchBranch = async (e) => { await api.post('/branch-switch', { branch_id: e.target.value }); await app.refresh(); window.location.reload(); };
   return (
     <div className="shell">
-      <aside className="side">
+      <aside id="hospital-sidebar" className={menuOpen ? "side side-open" : "side"}>
         <div className="brand" title={me.inName || 'ICTHospital'}>
           <MaterialIcon source={local_hospital} />
-          <span className="icon-label-text">{me.inName || 'ICTHospital'}</span>
+          <span>{me.inName || 'ICTHospital'}</span>
         </div>
         <nav aria-label="Hospital navigation">
           {MENU.map(([group, groupIcon, items]) => {
@@ -110,12 +112,13 @@ export default function Layout() {
             if (!shown.length) return null;
             return (
               <div className="side-group" key={group} role={group ? 'group' : undefined} aria-label={group || undefined}>
-                {groupIcon && <div className="grp" title={group}><MaterialIcon source={groupIcon} /></div>}
+                {groupIcon && <div className="grp" title={group}><MaterialIcon source={groupIcon} /><span>{group}</span></div>}
                 <div className="side-links">
                   {shown.map(([label, to, , icon]) => (
-                    <NavLink key={to} to={to} title={label} aria-label={label}
+                    <NavLink key={to} to={to} title={label} onClick={() => setMenuOpen(false)}
                       className={({ isActive }) => (isActive ? 'active' : '')} end={to === '/dashboard'}>
                       <MaterialIcon source={icon} />
+                      <span>{label}</span>
                     </NavLink>
                   ))}
                 </div>
@@ -126,6 +129,10 @@ export default function Layout() {
       </aside>
       <div className="main">
         <div className="top no-print">
+          <button type="button" className="btn side-toggle" aria-label="Toggle navigation"
+            aria-expanded={menuOpen} aria-controls="hospital-sidebar" onClick={() => setMenuOpen(!menuOpen)}>
+            <MaterialIcon source={menu} />
+          </button>
           <form className="search" onSubmit={(e) => { e.preventDefault(); if (q.trim().length >= 2) nav(`/search?search=${encodeURIComponent(q.trim())}`); }}><input type="search" placeholder="Search patients and doctors…" value={q} onChange={(e) => setQ(e.target.value)} /></form>
           <div className="grow" />
           {me.branch?.canSwitch && me.branch.list.length > 0 && <select style={{ width: 'auto' }} value={me.branch.current || ''} onChange={switchBranch}><option value="">All branches</option>{me.branch.list.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}</select>}

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { api } from '../api.js';
 import { useAction, useLoad } from '../hooks.js';
-import { Badge, Btn, Card, ConfirmBtn, Field, Filters, KV, Letterhead, LinkBtn, Load, Page, PrintButton, StatusBadge, Table, Tabs } from '../components/ui.jsx';
+import { workflowActionKind, Badge, Btn, Card, ConfirmBtn, Field, Filters, KV, Letterhead, LinkBtn, Load, Page, PrintButton, StatusBadge, Table, Tabs } from '../components/ui.jsx';
 import { fmtDate, today } from '../util.js';
 
 const T = ({ label, value, onChange, rows = 3, ...p }) => <Field label={label}><textarea rows={rows} value={value ?? ''} onChange={(e) => onChange(e.target.value)} {...p} /></Field>;
@@ -43,7 +43,7 @@ export function ConsultationVisit() {
       <Card title="Dental"><T label="Findings" value={v.dental.notes} onChange={(x) => nested('dental', 'notes', x)} /></Card><Card title="Eye"><div className="grid" style={{ gridTemplateColumns: '1fr 1fr' }}><I label="Right eye" value={v.eye.right} onChange={(x) => nested('eye', 'right', x)} /><I label="Left eye" value={v.eye.left} onChange={(x) => nested('eye', 'left', x)} /></div></Card></>}
     {tab === 'vacc' && <Card><table className="table"><tbody>{VACCINES.map((n) => <tr key={n}><td>{n}</td><td><input type="date" value={v.vaccines[n] || ''} onChange={(e) => nested('vaccines', n, e.target.value)} /></td></tr>)}</tbody></table></Card>}
     {tab === 'prev' && <Card><Table rows={d.previous} columns={[{ label: 'Date', render: (r) => fmtDate(r.date) }, { label: 'Complaint', key: 'presenting_complaint' }, { label: 'Diagnosis', key: 'diagnosis' }, { label: '', render: (r) => <Link to={`/consultations/${r.id}/print`}>View</Link> }]} /></Card>}
-    <div className="form-actions"><Btn kind="primary" disabled={busy} onClick={() => save('save')}>Save</Btn><Btn kind="success" disabled={busy} onClick={() => save('complete')}>Save & complete visit</Btn></div></Page>;
+    <div className="form-actions"><Btn kind={workflowActionKind(d.visit.status)} disabled={busy} onClick={() => save('save')}>Save</Btn><Btn kind={workflowActionKind(d.visit.status)} disabled={busy} onClick={() => save('complete')}>Save & complete visit</Btn></div></Page>;
 }
 
 export function ConsultationPrint() {

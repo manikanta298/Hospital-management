@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { api } from '../api.js';
 import { useAction, useForm, useLoad } from '../hooks.js';
 import { useApp } from '../context.jsx';
-import { Badge, Btn, Card, ConfirmBtn, Field, Fields, FormActions, Filters, KV, Letterhead, LinkBtn, Load, Page, PrintButton, StatusBadge, Table } from '../components/ui.jsx';
+import { workflowActionKind, Badge, Btn, Card, ConfirmBtn, Field, Fields, FormActions, Filters, KV, Letterhead, LinkBtn, Load, Page, PrintButton, StatusBadge, Table } from '../components/ui.jsx';
 import { fmtDate, fmtDateTime, money, today } from '../util.js';
 import Crud from '../components/Crud.jsx';
 
@@ -28,7 +28,7 @@ export function AppointmentForm() {
       { name: 'start', label: 'Start time', type: 'time', required: true }, { name: 'minutes', label: 'Minutes', type: 'number', min: 5 }, { name: 'status', label: 'Status', type: 'select', options: d.statuses, required: true },
       { name: 'b_p', label: 'Blood pressure' }, { name: 'pulse', label: 'Pulse' }, { name: 'temprature', label: 'Temperature' }, { name: 'weight', label: 'Weight' }, { name: 'remarks', label: 'Remarks', span: 2 }, { name: 'video', label: 'Video consultation', type: 'checkbox' }]} />
     {free.length > 0 && <div style={{ marginTop: 12 }}><div className="muted">Free slots that day (click to use):</div><div className="row" style={{ marginTop: 6 }}>{free.map((s) => <Btn key={s.start} size="sm" onClick={() => { form.set('start', s.start); form.set('minutes', s.minutes); }}>{s.start}</Btn>)}</div></div>}
-    <FormActions><Btn kind="primary" type="submit" disabled={busy}>Save</Btn><LinkBtn to="/appointments">Cancel</LinkBtn></FormActions></form></Card>}</Load></Page>;
+    <FormActions><Btn kind={workflowActionKind(form.values.status)} type="submit" disabled={busy}>Save</Btn><LinkBtn to="/appointments">Cancel</LinkBtn></FormActions></form></Card>}</Load></Page>;
 }
 export function AppointmentShow() {
   const { id } = useParams(); const st = useLoad(`/appointments/${id}`);
@@ -50,10 +50,10 @@ export function OpdQueue() {
       <label className="check"><input type="checkbox" checked={w.values.bill} onChange={(e) => w.set('bill', e.target.checked)} /> Bill visit fee</label><Btn kind="primary" type="submit">Issue token</Btn></form></Card>}
     <Card><Table rows={d.visits} empty="No visits yet." columns={[{ label: 'Token', render: (r) => <span className="queue-token" style={{ fontSize: 20 }}>{r.token_no ?? '—'}</span> }, { label: 'Time', render: (r) => String(r.time_slot).split(' - ')[0] }, { label: 'Patient', render: (r) => <Link to={`/patients/${r.patient}`}>{d.patients[r.patient]?.name}</Link> }, { label: 'Doctor', render: (r) => d.doctorNames[r.doctor] }, { label: 'Visit', render: (r) => d.visitTypes[r.visit_type] || '—' }, { label: 'Status', render: (r) => <StatusBadge value={r.status} /> },
       { label: '', className: 'right nowrap', render: (r) => <>
-        {['scheduled', 'no show'].includes(r.status) && <Btn size="sm" onClick={() => act('check-in')(r.id)}>Check in</Btn>}
-        {r.status === 'arrived' && <Btn size="sm" kind="primary" onClick={() => act('call-in')(r.id)}>Call in</Btn>}
+        {['scheduled', 'no show'].includes(r.status) && <Btn size="sm" kind={workflowActionKind(r.status)} onClick={() => act('check-in')(r.id)}>Check in</Btn>}
+        {r.status === 'arrived' && <Btn size="sm" kind={workflowActionKind(r.status)} onClick={() => act('call-in')(r.id)}>Call in</Btn>}
         {['arrived', 'in consultation'].includes(r.status) && app.can('consultation_add') && <Btn size="sm" onClick={() => nav(`/consultations/visit/${r.id}`)}>Consult</Btn>}
-        {r.status === 'in consultation' && <Btn size="sm" kind="success" onClick={() => act('done')(r.id)}>Done</Btn>}
+        {r.status === 'in consultation' && <Btn size="sm" kind={workflowActionKind(r.status)} onClick={() => act('done')(r.id)}>Done</Btn>}
         {!r.payment_id && app.can('payment_add') && <Btn size="sm" onClick={async () => { if (await run(() => api.post(`/opd/${r.id}/bill`, { visit_type: r.visit_type || 'first' }))) st.reload(); }}>Bill</Btn>}
         {r.payment_id && <Link className="btn btn-sm" to={`/invoices/${r.payment_id}`}>Invoice</Link>} {r.token_no && <Link className="btn btn-sm" to={`/opd/${r.id}/token`}>Token</Link>}</> }]} /></Card></>}</Load></Page>;
 }

@@ -39,6 +39,20 @@ export function Pager({ meta, onPage }) {
     </div>
   );
 }
+// Workflow state controls the accent while the action label stays visible.
+export function workflowActionKind(status) {
+  switch (status) {
+    case 'pending': case 'scheduled': case 'draft': case 'ordered': case 'requested':
+      return 'workflow-pending';
+    case 'active': case 'arrived': case 'in consultation': case 'performed':
+      return 'workflow-active';
+    case 'inactive': case 'cancelled': case 'no show':
+      return 'workflow-inactive';
+    default:
+      return 'primary';
+  }
+}
+
 export const Btn = ({ children, kind = 'default', size, className, ...p }) => <button type="button" className={cls('btn', `btn-${kind}`, size && `btn-${size}`, className)} {...p}>{children}</button>;
 export const LinkBtn = ({ to, children, kind = 'default', size, className }) => <Link to={to} className={cls('btn', `btn-${kind}`, size && `btn-${size}`, className)}>{children}</Link>;
 export function ConfirmBtn({ children, message = 'Are you sure?', onConfirm, kind = 'danger', size = 'sm', disabled }) {
