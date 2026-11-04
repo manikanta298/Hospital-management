@@ -1,27 +1,102 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import {
+  Activity, ArrowDownLeft, ArrowUpRight, BedDouble, CalendarClock, CalendarDays,
+  CalendarRange, ClipboardPlus, Clock, Contact, FlaskConical, HeartPulse, IdCard,
+  LayoutDashboard, ListChecks, Phone, Pill, Stethoscope, UserRound, UsersRound, Wallet,
+} from 'lucide-react';
 import { api, toForm } from '../api.js';
 import { useAction, useForm, useLoad } from '../hooks.js';
 import { useApp } from '../context.jsx';
 import Crud from '../components/Crud.jsx';
-import { Badge, Barcode, Btn, Card, ConfirmBtn, Fields, FormActions, Filters, Field, Load, Page, Pager, Stat, Table } from '../components/ui.jsx';
+import { Badge, Barcode, Btn, Card, ConfirmBtn, Fields, FormActions, Filters, Field, Load, Page, Pager, Table } from '../components/ui.jsx';
 import { fmtDateTime, fullName, money } from '../util.js';
+
+function DashboardIcon({ icon: Icon, label }) {
+  return (
+    <span className="dashboard-icon" title={label}>
+      <Icon aria-hidden="true" />
+      <span className="icon-label-text">{label}</span>
+    </span>
+  );
+}
+
+function DashboardStat({ label, icon, value, tone, detail }) {
+  return (
+    <div className={`stat dashboard-stat${tone ? ` stat-${tone}` : ''}`}>
+      <DashboardIcon icon={icon} label={label} />
+      <div className="stat-v">{value}</div>
+      {detail && (
+        <div className="stat-s">
+          <DashboardIcon icon={detail.icon} label={detail.label} />
+          {detail.value}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DashboardLink({ to, icon, label }) {
+  return (
+    <Link to={to} className="dashboard-icon-link" aria-label={label} title={label}>
+      <DashboardIcon icon={icon} label={label} />
+    </Link>
+  );
+}
+
+function dashboardColumn(label, icon, column) {
+  return { ...column, label, header: <DashboardIcon icon={icon} label={label} /> };
+}
 
 export function Dashboard() {
   const st = useLoad('/dashboard');
-  return <Page title="Dashboard"><Load state={st}>{(d) => (
-    <>
-      <div className="stats">
-        <Stat label="Patients" value={d.totalPatients} /><Stat label="Doctors" value={d.totalDoctors} tone="blue" /><Stat label="Staff" value={d.totalStaff} tone="blue" />
-        <Stat label="Beds free / total" value={`${d.freeBeds} / ${d.totalBeds}`} sub={`${d.occupancy}% occupied`} tone="amber" /><Stat label="Appointments" value={d.totalAppointments} sub={`${d.pendingAppointments} pending`} />
-        <Stat label="Prescriptions" value={d.totalPrescriptions} /><Stat label="Lab requests" value={d.totalLabTests} /><Stat label="Medicines" value={d.totalMedicines} />
-      </div>
-      <div className="stats"><Stat label="Income" value={money(d.income)} /><Stat label="Expenses" value={money(d.expenses)} tone="red" /><Stat label="Balance" value={money(d.balance)} tone={d.balance < 0 ? 'red' : undefined} /></div>
-      <div className="cols-2">
-        <Card title="Recent patients" actions={<Link to="/patients">All patients</Link>}><Table rows={d.recentPatients} columns={[{ label: 'Name', render: (r) => <Link to={`/patients/${r.id}`}>{r.name}</Link> }, { label: 'Phone', key: 'phone' }, { label: 'Sex', key: 'sex' }, { label: 'Age', key: 'age' }, { label: 'Added', key: 'add_date' }]} /></Card>
-        <Card title="Recent appointments" actions={<Link to="/appointments">All appointments</Link>}><Table rows={d.recentAppointments} columns={[{ label: 'Patient', render: (r) => d.patientNames[r.patient] || '—' }, { label: 'Doctor', render: (r) => d.doctorNames[r.doctor] || '—' }, { label: 'Date', key: 'date' }, { label: 'Slot', key: 'time_slot' }, { label: 'Status', key: 'status' }]} /></Card>
-      </div>
-    </>)}</Load></Page>;
+  return (
+    <Page title={<DashboardIcon icon={LayoutDashboard} label="Dashboard" />}>
+      <Load state={st}>{(d) => (
+        <>
+          <div className="stats">
+            <DashboardStat label="Patients" icon={UserRound} value={d.totalPatients} />
+            <DashboardStat label="Doctors" icon={Stethoscope} value={d.totalDoctors} tone="blue" />
+            <DashboardStat label="Staff" icon={UsersRound} value={d.totalStaff} tone="blue" />
+            <DashboardStat label="Beds free / total" icon={BedDouble} value={`${d.freeBeds} / ${d.totalBeds}`} tone="amber"
+              detail={{ icon: Activity, label: 'Occupancy', value: `${d.occupancy}%` }} />
+            <DashboardStat label="Appointments" icon={CalendarDays} value={d.totalAppointments}
+              detail={{ icon: Clock, label: 'Pending appointments', value: d.pendingAppointments }} />
+            <DashboardStat label="Prescriptions" icon={ClipboardPlus} value={d.totalPrescriptions} />
+            <DashboardStat label="Lab requests" icon={FlaskConical} value={d.totalLabTests} />
+            <DashboardStat label="Medicines" icon={Pill} value={d.totalMedicines} />
+          </div>
+          <div className="stats">
+            <DashboardStat label="Income" icon={ArrowDownLeft} value={money(d.income)} />
+            <DashboardStat label="Expenses" icon={ArrowUpRight} value={money(d.expenses)} tone="red" />
+            <DashboardStat label="Balance" icon={Wallet} value={money(d.balance)} tone={d.balance < 0 ? 'red' : undefined} />
+          </div>
+          <div className="cols-2">
+            <Card title={<DashboardIcon icon={Contact} label="Recent patients" />}
+              actions={<DashboardLink to="/patients" icon={UsersRound} label="All patients" />}>
+              <Table rows={d.recentPatients} columns={[
+                dashboardColumn('Name', IdCard, { render: (r) => <Link to={`/patients/${r.id}`}>{r.name}</Link> }),
+                dashboardColumn('Phone', Phone, { key: 'phone' }),
+                dashboardColumn('Sex', UserRound, { key: 'sex' }),
+                dashboardColumn('Age', HeartPulse, { key: 'age' }),
+                dashboardColumn('Added', CalendarClock, { key: 'add_date' }),
+              ]} />
+            </Card>
+            <Card title={<DashboardIcon icon={CalendarClock} label="Recent appointments" />}
+              actions={<DashboardLink to="/appointments" icon={CalendarRange} label="All appointments" />}>
+              <Table rows={d.recentAppointments} columns={[
+                dashboardColumn('Patient', UserRound, { render: (r) => d.patientNames[r.patient] || '—' }),
+                dashboardColumn('Doctor', Stethoscope, { render: (r) => d.doctorNames[r.doctor] || '—' }),
+                dashboardColumn('Date', CalendarDays, { key: 'date' }),
+                dashboardColumn('Slot', Clock, { key: 'time_slot' }),
+                dashboardColumn('Status', ListChecks, { key: 'status' }),
+              ]} />
+            </Card>
+          </div>
+        </>
+      )}</Load>
+    </Page>
+  );
 }
 
 export function SearchPage() {

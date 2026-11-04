@@ -25,7 +25,7 @@ export const StatusBadge = ({ value }) => (value ? <Badge tone={statusTone(value
 export function Table({ columns, rows, empty = 'Nothing here yet.', rowKey = 'id', onRow }) {
   if (!rows || !rows.length) return <div className="empty">{empty}</div>;
   return (
-    <div className="table-wrap"><table className="table"><thead><tr>{columns.map((c) => <th key={c.label} className={c.className}>{c.label}</th>)}</tr></thead>
+    <div className="table-wrap"><table className="table"><thead><tr>{columns.map((c) => <th key={c.label} className={c.className}>{c.header ?? c.label}</th>)}</tr></thead>
       <tbody>{rows.map((r, i) => <tr key={r[rowKey] ?? i} onClick={onRow ? () => onRow(r) : undefined}>{columns.map((c) => <td key={c.label} className={c.className}>{c.render ? c.render(r, i) : r[c.key]}</td>)}</tr>)}</tbody></table></div>
   );
 }
